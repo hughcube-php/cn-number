@@ -38,16 +38,14 @@ class CNNumber
 
     /**
      * 转小写
-     *
-     * @return string
      */
-    public static function toLower($number)
+    public static function toLower($number): string
     {
         $digitUnitLookup = static::buildUnitLookup(static::$lowerDigitUnitLookup);
         $resultsArray = static::convert($number, static::$lowerDigitLookup, $digitUnitLookup);
 
         $results = "{$resultsArray['signed']}{$resultsArray['integer']}";
-        if (!empty($resultsArray['decimal'])){
+        if (!empty($resultsArray['decimal'])) {
             $results .= "点{$resultsArray['decimal']}";
         }
 
@@ -56,16 +54,14 @@ class CNNumber
 
     /**
      * 转大写
-     *
-     * @return string
      */
-    public static function toCapital($number)
+    public static function toCapital($number): string
     {
         $digitUnitLookup = static::buildUnitLookup(static::$capitalDigitUnitLookup);
         $resultsArray = static::convert($number, static::$capitalDigitLookup, $digitUnitLookup);
 
         $results = "{$resultsArray['signed']}{$resultsArray['integer']}";
-        if (!empty($resultsArray['decimal'])){
+        if (!empty($resultsArray['decimal'])) {
             $results .= "点{$resultsArray['decimal']}";
         }
 
@@ -74,19 +70,17 @@ class CNNumber
 
     /**
      * 转成人民币
-     *
-     * @return string
      */
-    public static function toRmb($number)
+    public static function toRmb($number): string
     {
         $digitUnitLookup = static::buildUnitLookup(static::$capitalDigitUnitLookup);
 
         $resultsArray = static::convert($number, static::$capitalDigitLookup, $digitUnitLookup, static::$rmbUnitLookup);
 
         $results = "{$resultsArray['signed']}{$resultsArray['integer']}元";
-        if (empty($resultsArray['decimal'])){
+        if (empty($resultsArray['decimal'])) {
             $results .= '整';
-        }else{
+        } else {
             $results .= "{$resultsArray['decimal']}";
         }
 
@@ -94,7 +88,7 @@ class CNNumber
     }
 
     /**
-     * @param float
+     * @param float|integer|string $number
      * @param array $digitLookup
      * @param array $digitUnitLookup
      * @param array|null $decimalUnitLookup
@@ -104,14 +98,14 @@ class CNNumber
      *                      'decimal' => '小数部分',
      *               ];
      */
-    protected static function convert($number, array $digitLookup, array $digitUnitLookup, array $decimalUnitLookup = null)
+    protected static function convert($number, array $digitLookup, array $digitUnitLookup, array $decimalUnitLookup = null): array
     {
         /** 必须是一个数字 */
-        if (!is_numeric($number)){
+        if (!is_numeric($number)) {
             throw new InvalidArgumentException('$number必须是一个数字.');
         }
 
-        /** @var bool $isNegative 是否负数 */
+        /** 是否负数 */
         $isNegative = 0 > $number;
 
         /** 如果传递进来的是科学计数法的, 转换成正常计数, 保留4位小数, 所以这里会存在一个精度的问题 */
@@ -121,12 +115,12 @@ class CNNumber
 
         $numberArray = explode('.', $_);
 
-        /** @var string $integerString 整数部分, 无符号, 清除左边的0 */
+        /** 整数部分, 无符号, 清除左边的0 */
         $integerString = isset($numberArray[0]) ? ltrim($numberArray[0], '0') : '0';
         $integerString = ltrim($integerString, '-');
         $integerString = empty($integerString) ? '0' : $integerString;
 
-        /** @var string $decimalString 小数部分, 无0., 清除右边的0 */
+        /** 小数部分, 无0., 清除右边的0 */
         $decimalString = isset($numberArray[1]) ? rtrim($numberArray[1], '0') : '';
 
 
@@ -135,19 +129,19 @@ class CNNumber
         $decimalString = rtrim($decimalString, '0');
 
         /** 不能超过最大的单位 */
-        if ((strlen($integerString)) > max(array_keys($digitUnitLookup)) + 1){
+        if ((strlen($integerString)) > max(array_keys($digitUnitLookup)) + 1) {
             throw new InvalidArgumentException('$number too large.');
         }
 
         // 整数部分
         $integerResults = '';
         $integerStringLength = strlen($integerString);
-        for($index = 0; $index < $integerStringLength; $index++){
+        for ($index = 0; $index < $integerStringLength; $index++) {
             /** 上一个数字 */
-            $pDigit = isset($digit) ? $digit : null;
+            $pDigit = $digit ?? null;
 
             /** 上一个单位 */
-            $pUnitIndex = isset($unitIndex) ? $unitIndex : null;
+            $pUnitIndex = $unitIndex ?? null;
 
             /** 单个的数字 */
             $digit = $integerString[$index];
@@ -157,7 +151,7 @@ class CNNumber
 
             /** 零的读法, 非零的数据的上一位是零才记录, 避免重复的零记录 */
             $isZero = '0' === $integerString                      // 整个整数部分就是零, 就是零
-                      || ('0' !== $digit && '0' === $pDigit);  // 当前非零, 上一个数字是零
+                || ('0' !== $digit && '0' === $pDigit);  // 当前非零, 上一个数字是零
             $zero = $isZero ? '零' : '';
 
             /** 数字的读法 */
@@ -165,7 +159,7 @@ class CNNumber
 
             /** 单位读法, 判断是否需要单位 */
             $isEmptyUnit = ('0' === $digit && (0 != $guessUnitIndex % 4))                        //  刚好处于单位升级, 四位升一级
-                           || '0000' === substr($integerString, $index - 3, 4);  //  连续的四个零  100001000, 万是不需要读出来的
+                || '0000' === substr($integerString, $index - 3, 4);  //  连续的四个零  100001000, 万是不需要读出来的
             $unitIndex = $isEmptyUnit ? null : $guessUnitIndex;
             $unit = null === $unitIndex ? '' : $digitUnitLookup[$unitIndex];
 
@@ -173,7 +167,7 @@ class CNNumber
             if (0 == $index
                 && '1' === $digit
                 && (1 == $unitIndex % 4)
-            ){
+            ) {
                 $num = '';
             }
 
@@ -188,7 +182,7 @@ class CNNumber
             if ('2' === $digit
                 && ((3 == $unitIndex % 4) || ((0 === $unitIndex % 4) && ($unitIndex >= 4)))
                 && (1 != $pUnitIndex % 4)
-            ){
+            ) {
                 $num = '两';
             }
 
@@ -201,9 +195,9 @@ class CNNumber
         // 小数部分拼接
         $decimalResults = '';
         $decimalStringLength = strlen($decimalString);
-        for($index = 0; $index < $decimalStringLength; $index++){
+        for ($index = 0; $index < $decimalStringLength; $index++) {
             /** 传递了小数的单位, 但是已经超过了 */
-            if (null !== $decimalUnitLookup && !isset($decimalUnitLookup[$index])){
+            if (null !== $decimalUnitLookup && !isset($decimalUnitLookup[$index])) {
                 break;
             }
 
@@ -217,7 +211,7 @@ class CNNumber
             $num = $digitLookup[$digit];
 
             /** 单位读法 */
-            $unit = isset($decimalUnitLookup[$index]) ? $decimalUnitLookup[$index] : '';
+            $unit = $decimalUnitLookup[$index] ?? '';
 
             /** 拼接 */
             $decimalResults .= ($zero . $num . $unit);
@@ -232,16 +226,13 @@ class CNNumber
 
     /**
      * 合并单位的对照表
-     *
-     * @param $lowerDigitUnitLookup
-     * @return array
      */
-    protected static function buildUnitLookup(array $lowerDigitUnitLookup)
+    protected static function buildUnitLookup(array $lowerDigitUnitLookup): array
     {
         $lookup = [];
-        foreach(static::$digitUnitLookup as $item1){
+        foreach (static::$digitUnitLookup as $item1) {
             $lookup[] = $item1;
-            foreach($lowerDigitUnitLookup as $item2){
+            foreach ($lowerDigitUnitLookup as $item2) {
                 $lookup[] = $item2;
             }
         }
