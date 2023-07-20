@@ -208,7 +208,7 @@ class CNNumber
             }
 
             /** 单个的数字 */
-            $digit = $decimalString{$index};
+            $digit = $decimalString[$index];
 
             /** 零的读法, 零的直接读零 */
             $zero = '0' === $digit ? '零' : '';
